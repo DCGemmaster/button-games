@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Button Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --card: #1c1c1f;
+    --border: #2a2a2e;
+    --text: #f0ede6;
+    --muted: #6b6b72;
+    --subtle: #3a3a40;
+
+    /* Game accent colors */
+    --purple: #a47ee8;
+    --purple-dim: #8860cc;
+    --purple-glow: rgba(164,126,232,.15);
+
+    --blue: #4ea8e8;
+    --blue-dim: #2f8fd4;
+    --blue-glow: rgba(78,168,232,.12);
+
+    --green: #47c98a;
+    --green-dim: #359e6c;
+    --green-glow: rgba(71,201,138,.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    animation: orbIn 2s ease forwards;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(164,126,232,.09) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    animation-delay: 0.2s;
+  }
+  .orb-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(78,168,232,.06) 0%, transparent 70%);
+    bottom: -100px; left: -150px;
+    animation-delay: 0.6s;
+  }
+  @keyframes orbIn { to { opacity: 1; } }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 72px 0 56px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: .4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    opacity: 0;
+    animation: fadeUp .6s ease .1s forwards;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 9vw, 5.2rem);
+    font-weight: 900;
+    line-height: .95;
+    letter-spacing: -.03em;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp .6s ease .2s forwards;
+  }
+
+  h1 .line2 {
+    display: block;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--muted);
+    font-size: clamp(2rem, 6vw, 3.4rem);
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .14em;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp .6s ease .35s forwards;
+  }
+
+  .header-rule {
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 2px;
+    background: var(--purple);
+    border-radius: 2px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 9px;
+    letter-spacing: .35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    animation: fadeUp .5s ease .45s forwards;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── GAME CARDS ── */
+  .games-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .game-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0 20px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .game-card:nth-child(1) { animation: fadeUp .5s ease .5s forwards; }
+  .game-card:nth-child(2) { animation: fadeUp .5s ease .62s forwards; }
+  .game-card:nth-child(3) { animation: fadeUp .5s ease .74s forwards; }
+
+  /* Colored left border stripe */
+  .game-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 14px 0 0 14px;
+    transition: opacity .25s;
+  }
+
+  /* Hover glow bg */
+  .game-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .3s;
+    border-radius: 14px;
+  }
+
+  /* Purple — Imposter */
+  .game-card.purple::before { background: var(--purple); }
+  .game-card.purple::after { background: var(--purple-glow); }
+  .game-card.purple:hover { border-color: var(--purple); box-shadow: 0 0 40px rgba(164,126,232,.12); }
+
+  /* Blue — Wordlock */
+  .game-card.blue::before { background: var(--blue); }
+  .game-card.blue::after { background: var(--blue-glow); }
+
+  /* Green — Connections */
+  .game-card.green::before { background: var(--green); }
+  .game-card.green::after { background: var(--green-glow); }
+
+  .game-card:not(.coming-soon):hover {
+    transform: translateX(4px);
+  }
+  .game-card:not(.coming-soon):hover::after { opacity: 1; }
+
+  /* Coming soon state */
+  .game-card.coming-soon {
+    opacity: 0;
+    cursor: default;
+  }
+  .game-card.coming-soon:nth-child(2) { animation: fadeUp .5s ease .62s forwards; }
+  .game-card.coming-soon:nth-child(3) { animation: fadeUp .5s ease .74s forwards; }
+  .game-card.coming-soon .card-body,
+  .game-card.coming-soon .card-meta,
+  .game-card.coming-soon .card-icon { opacity: .3; filter: grayscale(.6); }
+  .game-card.coming-soon .card-cta { opacity: 0; }
+
+  /* Card inner layout */
+  .card-body { grid-column: 1; grid-row: 1; }
+  .card-meta { grid-column: 1; grid-row: 2; margin-top: 8px; }
+  .card-icon { grid-column: 2; grid-row: 1 / 3; line-height: 1; position: relative; z-index: 1; }
+  .color-square { width: 42px; height: 42px; border-radius: 10px; display: block; }
+  .card-cta { display: none; }
+
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-tagline {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tag {
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .game-card.purple .tag.primary { border-color: rgba(164,126,232,.4); color: var(--purple); background: rgba(164,126,232,.08); }
+  .game-card.blue .tag.primary { border-color: rgba(78,168,232,.4); color: var(--blue); background: rgba(78,168,232,.08); }
+  .game-card.green .tag.primary { border-color: rgba(71,201,138,.4); color: var(--green); background: rgba(71,201,138,.08); }
+
+  .coming-soon-pill {
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 2;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 72px;
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp .5s ease .9s forwards;
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .footer-sub {
+    font-size: 9px;
+    color: var(--subtle);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    header { padding: 52px 0 40px; margin-bottom: 40px; }
+    .game-card { padding: 22px 22px; }
+    .color-square { width: 34px; height: 34px; border-radius: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Collect your daily belts</div>
+    <h1>
+      The Button
+      <span class="line2">Games</span>
+    </h1>
+    <div class="header-sub">Custom-built puzzles. Share a link. Play together.</div>
+    <div class="header-rule"></div>
+  </header>
+
+  <div class="section-label">Choose a game</div>
+
+  <div class="games-grid">
+
+    <!-- Imposter — LIVE -->
+    <a class="game-card purple" href="imposter.html">
+      <div class="card-body">
+        <div class="card-name">Imposter</div>
+        <div class="card-tagline">Find the clue that doesn't belong. Guess the hidden theme. Score up to 5 points.</div>
+      </div>
+      <div class="card-meta">
+        <span class="tag primary">Live</span>
+        <span class="tag">2 Rounds</span>
+        <span class="tag">Purple Belt</span>
+      </div>
+      <div class="card-icon"><span class="color-square" style="background:var(--purple);opacity:.85"></span></div>
+    </a>
+
+    <!-- Wordlock — Coming Soon -->
+    <div class="game-card blue coming-soon">
+      <span class="coming-soon-pill">Coming soon</span>
+      <div class="card-body">
+        <div class="card-name">Wordlock</div>
+        <div class="card-tagline">A custom Wordle — your friend sets the secret word, you get 6 tries to crack it.</div>
+      </div>
+      <div class="card-meta">
+        <span class="tag primary">Wordle</span>
+        <span class="tag">6 Guesses</span>
+      </div>
+      <div class="card-icon"><span class="color-square" style="background:var(--blue);opacity:.85"></span></div>
+    </div>
+
+    <!-- Connections — Coming Soon -->
+    <div class="game-card green coming-soon">
+      <span class="coming-soon-pill">Coming soon</span>
+      <div class="card-body">
+        <div class="card-name">Connections</div>
+        <div class="card-tagline">Group 16 clues into 4 secret categories. Custom-built by your crew.</div>
+      </div>
+      <div class="card-meta">
+        <span class="tag primary">Grouping</span>
+        <span class="tag">4 Categories</span>
+      </div>
+      <div class="card-icon"><span class="color-square" style="background:var(--green);opacity:.85"></span></div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-logo">The Button Games</div>
+    <div class="footer-sub">Made for friends &nbsp;·&nbsp; No login &nbsp;·&nbsp; Just puzzles</div>
+  </footer>
+
+</div>
+
+</body>
+</html>
